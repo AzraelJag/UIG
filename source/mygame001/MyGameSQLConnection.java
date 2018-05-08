@@ -22,18 +22,13 @@ public class MyGameSQLConnection {
 	//private static String dbHost = "localhost"; // Hostname
 	//private static String dbUser = "root"; // Datenbankuser
 	//private static String dbPass = ""; // Datenbankpasswort
-	private static String dbPort = "3306"; // Port -- Standard: 3306
-	private static String dbName = "mygame001"; // Datenbankname
-	//private static String dbHost = "192.168.178.39"; // Hostname
-	private static String dbHost = "Michaele-Notebk"; // Hostname
-	private static String dbUser = "mygame001"; // Datenbankuser
-	private static String dbPass = "zw!?!vb123"; // Datenbankpasswort
+
 
 	// public static String User_Group;
 
 	private MyGameSQLConnection() {
 		try {
-			Class.forName("com.mysql.jdbc.Driver"); // Datenbanktreiber für JDBC
+			Class.forName("com.mysql.jdbc.Driver"); // Datenbanktreiber fÃ¼r JDBC
 													// Schnittstellen laden.
 
 			// Verbindung zur JDBC-Datenbank herstellen.
@@ -234,7 +229,7 @@ public class MyGameSQLConnection {
 		}
 	}
 
-	// prüfe auf neue ACCOUNT-TRANSAKTIONEN-Daten und schreibe dem Account gut
+	// prÃ¼fe auf neue ACCOUNT-TRANSAKTIONEN-Daten und schreibe dem Account gut
 	public static void fillAccountTransaktionen(String userid, String blockchain) {
 		con = getInstance();
 		if (con != null) {
@@ -266,7 +261,7 @@ public class MyGameSQLConnection {
 			// aktuelle User Wallet Adresse lesen
 			try {
 				query = con.createStatement();
-				// neue Einträge in der Transaktionshistorie suchen und
+				// neue EintrÃ¤ge in der Transaktionshistorie suchen und
 				// verarbeiten
 				String sql = "SELECT WALLET_ADRESS " + "FROM USER "
 						+ "WHERE USER_ID = '" + userid + "' ";
@@ -281,10 +276,10 @@ public class MyGameSQLConnection {
 				e.printStackTrace();
 			}
 
-			// neue Einträge in der Transaktionshistorie suchen und verarbeiten
+			// neue EintrÃ¤ge in der Transaktionshistorie suchen und verarbeiten
 			try {
 				query = con.createStatement();
-				// neue Einträge in der Transaktionshistorie suchen und
+				// neue EintrÃ¤ge in der Transaktionshistorie suchen und
 				// verarbeiten
 				String sql = "SELECT BLOCKCHAIN, BLOCKNUMMER, TRANSAKTION "
 						+ "FROM TRANSAKTIONSHISTORIE "
@@ -305,7 +300,7 @@ public class MyGameSQLConnection {
 					// System.out.println("SendeAdress: " +
 					// trx.getEmpfangsAdresse().toUpperCase());
 
-					// falls neue Transaktion für den user gefunden, dannn
+					// falls neue Transaktion fÃ¼r den user gefunden, dannn
 					// gutschreiben
 					if ((trx.getSendeAdresse()
 							.substring(2, trx.getSendeAdresse().length())
@@ -323,7 +318,7 @@ public class MyGameSQLConnection {
 						boolean vorhanden = false;
 						try {
 							query = con.createStatement();
-							// neue Einträge in der Transaktionshistorie suchen
+							// neue EintrÃ¤ge in der Transaktionshistorie suchen
 							// und
 							// verarbeiten
 							String sqlvorhanden = "SELECT COUNT(*) AS ANZAHL "
@@ -509,7 +504,7 @@ public class MyGameSQLConnection {
 		return erfolgreich;
 	}
 
-	// Login prüfen
+	// Login prÃ¼fen
 	public static boolean pruefeLogin(String userid, String pw) {
 		//System.out.println("User: " + userid);
 		//System.out.println("PW: " + pw);
