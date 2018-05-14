@@ -138,10 +138,13 @@ public class MyGame extends Application {
 	static TableView<Transaktion> trxHistorieTableView = new TableView<Transaktion>();
 
 	// Cache für die AccountTransaktionList
-	public static ObservableList<AccountTransaktionList> trxAcountHistorie = FXCollections
+	public static ObservableList<AccountTransaktionList> trxAccountHistorie = FXCollections
 			.observableArrayList();
-	// private static TableView<Transaktion> trxHistorieTableView = new
-	// TableView<Transaktion>();
+	//Anzeige der Usertransaktionshistorie über das Profil
+	public static ObservableList<Transaktion> trxAccountList = FXCollections
+			.observableArrayList();
+	private static TableView<Transaktion> trxAccountTableView = new
+	TableView<Transaktion>();
 
 	// Cache für die Accounts
 	public static ObservableList<Account> accounts = FXCollections
@@ -617,12 +620,16 @@ public class MyGame extends Application {
 			boolean loginOK = false;
 			boolean canceled = false;
 			boolean showGalery = false;
-			while (!loginOK && !canceled) {
+			while (!loginOK && !canceled){
 				MyLogin login = new MyLogin();
+				//GridPane grid = login.MyLogin();
+				//border.setCenter(grid);
 
 				loginOK = login.loginSucessfully();
 				canceled = login.loginCanceled();
 				showGalery = login.showGalery();
+				
+				
 
 				if (!login.loginSucessfully()) {
 					Hilfsmethoden.setHinweisDialog(
@@ -650,6 +657,8 @@ public class MyGame extends Application {
 					}
 				}
 			}
+
+			
 			if (canceled) {
 				// Anwendung beenden
 				// alle Stages (Fenster) schließen
@@ -1196,10 +1205,10 @@ public class MyGame extends Application {
 					// System.out.println("accUserID: " +
 					// accounts.get(j).getId());
 					// Transaktion zum User eintragen und gutschreiben
-					for (int k = 0; k < trxAcountHistorie.size(); k++) {
-						if (trxAcountHistorie.get(k).getId()
+					for (int k = 0; k < trxAccountHistorie.size(); k++) {
+						if (trxAccountHistorie.get(k).getId()
 								.equals(accounts.get(j).getId())) {
-							trxAcountHistorie.get(k).addTransaktion(trx);
+							trxAccountHistorie.get(k).addTransaktion(trx);
 						}
 					}
 
@@ -1456,49 +1465,37 @@ public class MyGame extends Application {
 
 	private void setAccStage(VBox vbox, int AccNr) {
 		vbox.setId("vbox" + AccNr);
-		// vbox.setStyle("-fx-background-color: #4d66cc;-fx-text-fill: WHITE;");
 		vbox.getStylesheets().add(pfad_data_css + "mygame.css");
-	
-		Scene scene = new Scene(vbox,((displayX - 250) / anzahlAccounts),
+		
+		if (spielChoiceField.getValue().equals("Solospiel")) {
+			border.setCenter(vbox);
+		}else{
+			Scene scene = new Scene(vbox,((displayX - 250) / anzahlAccounts),
 				displayY - 50);
 
-		scene.getStylesheets().add(pfad_data_css + "mygame.css");
-		Stage primaryStage = new Stage();
-		primaryStage.setTitle(accounts.get(AccNr).getName() + " "
+			scene.getStylesheets().add(pfad_data_css + "mygame.css");
+			Stage primaryStage = new Stage();
+			primaryStage.setTitle(accounts.get(AccNr).getName() + " "
 				+ accounts.get(AccNr).getBalance() + " UIG");
 
-		primaryStage.setScene(scene);
-
-		if (!spielChoiceField.getValue().equals("Solospiel")) {
+			primaryStage.setScene(scene);
 			primaryStage.setX(AccNr * ((displayX - 250) / anzahlAccounts));
-		} else {
-			primaryStage.setX(0 * ((displayX - 250) / anzahlAccounts));
-		}
+			primaryStage.setY(25);
 
-		primaryStage.setY(25);
-
-		// alteStage des Accounts schliessen, wenn bereits vorhanden
-		if (accStages.size() == anzahlAccounts) {
-			if (!spielChoiceField.getValue().equals("Solospiel")) {
+			// alteStage des Accounts schliessen, wenn bereits vorhanden
+			if (accStages.size() == anzahlAccounts) {
 				accStages.get(AccNr).closeStage();
 				accStages.get(AccNr).setStage(primaryStage);
 			} else {
-				accStages.get(0).closeStage();
-				accStages.get(0).setStage(primaryStage);
+				accStages.add(new MyStageController(primaryStage));
 			}
 
-		} else {
-			accStages.add(new MyStageController(primaryStage));
+			if (accStages.size() == 1) {
+				accStages.get(0).getStage().show();
+			} else {
+				accStages.get(AccNr).getStage().show();
+			}
 		}
-		// System.out.println("AccStagesNr.:" + AccNr);
-		// System.out.println("AnzAccStages:" + accStages.size());
-
-		if (accStages.size() == 1) {
-			accStages.get(0).getStage().show();
-		} else {
-			accStages.get(AccNr).getStage().show();
-		}
-
 
 		if ((gewonnen) && !(spielChoiceField.getValue() == "Solospiel")) {
 			// String musicFile = pfad_data_ton + "congratulations.mp3";
@@ -1516,20 +1513,12 @@ public class MyGame extends Application {
 					imgView);
 			
 			
-			//TRANSFORM and Scaling
+			//Rechteck-Form und Scaling
 			Rectangle rectangle = new Rectangle(300, 100, Color.LIGHTGRAY);
 			Image img = new Image("file:///" + pfad_data_itemjpg + "pokal.jpeg");
 			rectangle.setFill(new ImagePattern(img));
 			vbox.getChildren().add(rectangle);
-	        // TRANSLATION (Position ändern)
-	        Translate translate = new Translate();
-	        // Set arguments for translation
-	        translate.setX(200);
-	        translate.setY(50);
-	        translate.setZ(100);
-	        // Adding transformation to rectangle2
-	        //rectangle.getTransforms().addAll(translate);
-
+	        
 	        // SCALING (Größe ändern)
 	        Scale scale = new Scale();
 	        // Setting the scaling factor.
@@ -1592,7 +1581,6 @@ public class MyGame extends Application {
 		 * fileChooser.showOpenDialog(null);
 		 */
 		accounts.clear();
-		// System.out.println("Load Account:" + name + pw + datenquelle);
 
 		// Account in accounts(0) speichern
 		switch (datenquelle) {
@@ -1630,7 +1618,7 @@ public class MyGame extends Application {
 		aktBalanceString.setValue("GameToken: 1000 UIG");
 
 		MyGame.accountItemList.clear();
-		MyGame.trxAcountHistorie.clear();
+		MyGame.trxAccountHistorie.clear();
 		for (int i = 0; i < accStages.size(); i++) {
 			accStages.get(i).closeStage();
 		}
@@ -1644,7 +1632,7 @@ public class MyGame extends Application {
 					"1000"));
 
 			// Account-Transaktionen initialisieren
-			MyGame.trxAcountHistorie.add(new AccountTransaktionList("Acc" + 1));
+			MyGame.trxAccountHistorie.add(new AccountTransaktionList("Acc" + 1));
 
 			// Account-ItemList initialisieren
 			AccountItemList accountItems = new AccountItemList("");
