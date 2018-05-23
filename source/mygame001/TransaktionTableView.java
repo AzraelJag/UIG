@@ -21,13 +21,13 @@ public class TransaktionTableView {
         table.setEditable(true);
         table.autosize();
         
-		TableColumn blocknrCol = new TableColumn("BlockNr.");
+		TableColumn blocknrCol = new TableColumn("Blocknummer");
 		blocknrCol.setMinWidth(60);
 		blocknrCol.setCellValueFactory(new PropertyValueFactory("BlockNumber"));
         
-		TableColumn removedCol = new TableColumn("Removed");
-		removedCol.setMinWidth(60);
-		removedCol.setCellValueFactory(new PropertyValueFactory("Removed"));
+		TableColumn tsCol = new TableColumn("Datum/Uhrzeit");
+		tsCol.setMinWidth(60);
+		tsCol.setCellValueFactory(new PropertyValueFactory("DateTime"));
 		
 		TableColumn trxHashCol = new TableColumn("TransaktionsHash");
 		trxHashCol.setMinWidth(60);
@@ -49,7 +49,7 @@ public class TransaktionTableView {
 		tokennameCol.setMinWidth(60);
 		tokennameCol.setCellValueFactory(new PropertyValueFactory("TokenName"));
 
-		table.getColumns().addAll(blocknrCol, removedCol, trxHashCol, vonCol, nachCol, dataCol, tokennameCol );
+		table.getColumns().addAll(tsCol, blocknrCol, dataCol, tokennameCol, trxHashCol);
 
 		return table;
 		

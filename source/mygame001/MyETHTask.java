@@ -13,7 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-//import com.mysql.jdbc.Connection;
+import com.mysql.jdbc.Connection;
 
 
 
@@ -37,9 +37,9 @@ public class MyETHTask extends Application{
 					MyGame.gameWallet, MyGame.contract);
 			MyGame.aktBalanceString = new SimpleStringProperty("GameToken: "
 					+ MyGame.gameBalanceUIG.intValue() + " UIG");
-			System.out.println("GameBalance: " + MyGame.gameBalanceUIG);
+			//System.out.println("GameBalance: " + MyGame.gameBalanceUIG);
 			
-			System.out.println("starte Transaktionstask ...");
+			//System.out.println("starte Transaktionstask ...");
 			ETHReader.starteTransaktionsTask("ropsten");
 		}
 		

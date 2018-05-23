@@ -13,6 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -59,8 +64,8 @@ import allgemein.Hilfsmethoden;
 public class MyGame extends Application {
 
 	// Anwendungsumgebung
-	// public static String env = "home";
-	public static String env = "work";
+	public static String env = "home";
+	// public static String env = "work";
 
 	public static int displayX = 1920;
 	public static int displayY = 1080;
@@ -68,7 +73,9 @@ public class MyGame extends Application {
 	public static int anzahlWuerfel = 8;
 	public static int level = 1;
 	public static int thema = 1;
+	public static String sprache = new String("de");
 	public static boolean gewonnen = false;
+	public static long animationsDauer = 2000;
 
 	public static BigDecimal gameBalanceStart = new BigDecimal("1000.0");
 	public static BigDecimal gameBalanceUIG = new BigDecimal("1000.0");
@@ -137,14 +144,21 @@ public class MyGame extends Application {
 			.observableArrayList();
 	static TableView<Transaktion> trxHistorieTableView = new TableView<Transaktion>();
 
+	
 	// Cache für die AccountTransaktionList
-	public static ObservableList<AccountTransaktionList> trxAccountHistorie = FXCollections
+	public static ObservableList<AccountTransaktionList> trxAcountHistorie = FXCollections
 			.observableArrayList();
-	//Anzeige der Usertransaktionshistorie über das Profil
-	public static ObservableList<Transaktion> trxAccountList = FXCollections
-			.observableArrayList();
-	private static TableView<Transaktion> trxAccountTableView = new
-	TableView<Transaktion>();
+	// Cache für die AccountTransaktionList
+	//	public static ObservableList<AccountTransaktionList> trxAccountHistorie = FXCollections
+	//			.observableArrayList();
+		
+		
+		//Anzeige der Usertransaktionshistorie über das Profil
+		public static ObservableList<Transaktion> trxAccountList = FXCollections
+				.observableArrayList();
+		static TableView<Transaktion> trxAccountTableView = new
+		TableView<Transaktion>();
+
 
 	// Cache für die Accounts
 	public static ObservableList<Account> accounts = FXCollections
@@ -155,6 +169,10 @@ public class MyGame extends Application {
 	public static ObservableList<Item> items = FXCollections
 			.observableArrayList();
 	private static TableView<Item> itemTableView = new TableView<Item>();
+	
+	// Cache für die Pictures
+	public static ObservableList<Picture> pictureList = FXCollections
+			.observableArrayList();
 
 	// Cache für die AccountItemList
 	public static ObservableList<AccountItemList> accountItemList = FXCollections
@@ -219,7 +237,7 @@ public class MyGame extends Application {
 
 		// Game-Items einlesen
 		boolean dbvorhanden = MyGameSQLConnection.fillItem();
-		// dbvorhanden = false;
+
 		if (!dbvorhanden) {
 			boolean erfolgreich = readItems();
 			if (!erfolgreich)
@@ -228,6 +246,21 @@ public class MyGame extends Application {
 						null, 0);
 		}
 		// showItemsTableView();
+		dbvorhanden = MyGameSQLConnection.fillPictures();
+		if (!dbvorhanden) {
+			boolean erfolgreich = readPictures();
+			if (!erfolgreich)
+				Hilfsmethoden.setHinweisDialog(
+						"Achtung: Pictures konnten nicht gelesen werden !",
+						null, 0);
+		}
+		
+		//for (int i=0; i<MyGame.pictureList.size(); i++){
+		//	System.out.println("Picture: " + MyGame.pictureList.get(i).getThema() + 
+		//			MyGame.pictureList.get(i).getThema() + MyGame.pictureList.get(i).getSortGalery());
+		//}
+		// showPicturesTableView();
+		
 		mainStage = primaryStage;
 
 		TextField aktBalance = new TextField("GameToken: "
@@ -256,10 +289,10 @@ public class MyGame extends Application {
 		// btnLoadItems.setOnAction(btnLoadItemsEventListener);
 		// HBox.setMargin(btnLoadItems, new Insets(15, 0, 0, 5));
 
-		// Level und Bild auswählen
+/*		// Level und Bild auswählen
 		TreeItem<String> rootItem = new TreeItem<String>("Puzzle: ");
 		rootItem.setExpanded(true);
-		TreeItem<String> itemLv1  = new TreeItem<String>("Sonstiges");
+		TreeItem<String> itemLv1  = new TreeItem<String>("Tunier");
 		TreeItem<String> itemLv11 = new TreeItem<String>(lv11);
 		TreeItem<String> itemLv21 = new TreeItem<String>(lv21);
 		itemLv1.getChildren().addAll(itemLv11, itemLv21);
@@ -283,12 +316,33 @@ public class MyGame extends Application {
 		TreeItem<String> itemLv34 = new TreeItem<String>(lv34);
 		itemLv4b.getChildren().addAll(itemLv32, itemLv33, itemLv34);
 		itemLv4.getChildren().addAll(itemLv4a, itemLv4b);
-
-		// Add to Root
-		rootItem.getChildren().addAll(itemLv1, itemLv4);
-		levelTree = new TreeView<String>(rootItem);
+*/
+		
+		// Level und Bild auswählen (über PictureList)
+		TreeItem<String> rootItem = new TreeItem<String>("Puzzle: ");
+		rootItem.setExpanded(true);
+		
+		TreeItem<String> itemLv1   = new TreeItem<String>("Tunier");
 		itemLv1.setExpanded(true);
-		itemLv4.setExpanded(true);
+		itemLv1 = fillTreeView(itemLv1, sprache, "10");
+		TreeItem<String> itemLv2   = new TreeItem<String>("Gaming");
+		itemLv2.setExpanded(true);
+		TreeItem<String> itemLv21  = new TreeItem<String>("Pokemon Go");
+		itemLv21 = fillTreeView(itemLv21, sprache, "21");
+		itemLv2.getChildren().add(itemLv21);
+		TreeItem<String> itemLv3   = new TreeItem<String>("Fotos");	
+		itemLv3.setExpanded(true);
+		TreeItem<String> itemLv31  = new TreeItem<String>("Wolfsburg");	
+		itemLv31 = fillTreeView(itemLv31, sprache, "31");
+		TreeItem<String> itemLv32  = new TreeItem<String>("Hasselbach Tal");
+		itemLv32 = fillTreeView(itemLv32, sprache, "32");
+		itemLv3.getChildren().addAll(itemLv31, itemLv32);
+		
+		// Add to Root
+		rootItem.getChildren().addAll(itemLv1, itemLv2, itemLv3);
+		
+		levelTree = new TreeView<String>(rootItem);
+
 		// VBox.setMargin(levelTree, new Insets(10, 0, 0, 10));
 
 		// Anzahl Spieler beim Tuniermodus auswählen
@@ -476,17 +530,6 @@ public class MyGame extends Application {
 	// -> {
 
 	private static boolean readItems() {
-		// Items über den File-Chooser einlesen
-		/*
-		 * FileChooser fileChooser = new FileChooser();
-		 * fileChooser.getExtensionFilters() .addAll(new
-		 * FileChooser.ExtensionFilter("XLSX files (*.XLSX)", "*.XLSX"), new
-		 * FileChooser.ExtensionFilter("XLSX files (*.xlsx)", "*.xlsx"));
-		 * 
-		 * fileChooser.setInitialDirectory(pfad_data); File file =
-		 * fileChooser.showOpenDialog(null);
-		 */
-
 		boolean erfolgreich = true;
 		items.clear();
 
@@ -505,16 +548,28 @@ public class MyGame extends Application {
 		itemTableView = new TableView<Item>();
 		itemTableView = ItemTableView.getItemTableView(items);
 
-		/*
-		 * VBox vbox = new VBox(); vbox.setSpacing(10); vbox.autosize();
-		 * VBox.setVgrow(itemTableView, Priority.ALWAYS);
-		 * vbox.getChildren().addAll(itemTableView); Scene scene = new
-		 * Scene(vbox, 900, 900); Stage primaryStage = new Stage();
-		 * primaryStage.setTitle("Items"); primaryStage.setScene(scene);
-		 * primaryStage.show();
-		 */
 		return erfolgreich;
 	};
+	
+	private static boolean readPictures() {
+		boolean erfolgreich = true;
+		pictureList.clear();
+
+		File file = new File(pfad_data + "/Game001_Pictures.xlsx");
+		if (file != null) {
+			try {
+				ExcelReadWriter.readXLSXFileToPictureList(file);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				erfolgreich = false;
+			}
+			// Hilfsmethoden.setHinweisDialog("Datei wurde eingelesen");
+		}
+
+		return erfolgreich;
+	};
+
 
 	// =============================================================================================
 	// SPIELSTART
@@ -524,94 +579,42 @@ public class MyGame extends Application {
 
 		gewonnen = false;
 
-		/*
-		 * FileChooser fileChooser = new FileChooser();
-		 * fileChooser.getExtensionFilters() .addAll(new
-		 * FileChooser.ExtensionFilter("XLSX files (*.XLSX)", "*.XLSX"), new
-		 * FileChooser.ExtensionFilter("XLSX files (*.xlsx)", "*.xlsx"));
-		 * 
-		 * fileChooser.setInitialDirectory(pfad_data); File file =
-		 * fileChooser.showOpenDialog(null);
-		 */
-
 		// Level und Thema ermitteln
-		try {
-			String levelString = levelTree.getSelectionModel()
-					.getSelectedItem().getValue();
-
-			switch (levelString) {
-			case lv11:
-				level = 1;
-				thema = 1;
-				break;
-			case lv21:
-				level = 2;
-				thema = 1;
-				break;
-			case lv22:
-				level = 2;
-				thema = 2;
-				break;
-			// case lv23:
-			// level = 2;
-			// thema = 3;
-			// break;
-			// case lv24:
-			// level = 2;
-			// thema = 4;
-			// break;
-			case lv31:
-				level = 3;
-				thema = 1;
-				break;
-			case lv32:
-				level = 3; 
-				thema = 2; 
-				break; 
-			case lv33:
-				level = 3;
-				thema = 3; 
-				break; 
-			case lv34: 
-				level = 3; 
-				thema = 4; 
-				break;
-			case lv41:
-				level = 4;
-				thema = 1;
-				break;
-			case lv42:
-				level = 4;
-				thema = 2;
-				break;
-			case lv43:
-				level = 4;
-				thema = 3;
-				break;
-			case lv44:
-				level = 4;
-				thema = 4;
-				break;
-			default:
-				level = 1;
-				thema = 1;
-				break;
-			}
+		boolean Bildgefunden = false;
+		String treeAuswahl = new String("Familie");
+		try{
+			treeAuswahl = levelTree.getSelectionModel().getSelectedItem().getValue();
 		} catch (Exception e) {
+			// TODO Auto-generated catch block
+					Hilfsmethoden.setHinweisDialog(
+					"Es wurde keine Auswahl getroffen -> Default FAMILIE",
+					null, 0);
+		}	
+			
+			
+		for (int i=0; i<pictureList.size() && !Bildgefunden; i++){
 			level = 1;
 			thema = 1;
+			if ((pictureList.get(i).getName_de().equals(treeAuswahl)
+					|| pictureList.get(i).getName_en().equals(treeAuswahl))
+					){
+				level = Integer.parseInt(pictureList.get(i).getLevel());
+				thema = Integer.parseInt(pictureList.get(i).getThema());
+				Bildgefunden = true;
+			}
 		}
 
 		// Accounts, AccountItems und AccountTransaktionen laden, wenn kein
 		// "Tunier"-Modus eingestellt ist
 		if (spielChoiceField.getValue().equals("Solospiel")) {
-			/*
-			 * // neue Transaktionen von der Blockchain ermitteln und den
-			 * Accounts // gutschreiben boolean available =
-			 * ETHReader.availableTestETHRobsten(); if (available) {
-			 * System.out.println("starte Transaktionstask ...");
-			 * ETHReader.starteTransaktionsTask("ropsten"); }
-			 */
+			
+			  // neue Transaktionen von der Blockchain ermitteln und den
+			  //Accounts  gutschreiben 
+			  //boolean available = ETHReader.availableTestETHRobsten(); if (available) {
+			  //System.out.println("starte Transaktionstask ...");
+			  //ETHReader.starteTransaktionsTask("ropsten"); 
+			  //}
+			 
 
 			// Anzahl Accounts setzen
 			anzahlAccounts = 1;
@@ -620,16 +623,12 @@ public class MyGame extends Application {
 			boolean loginOK = false;
 			boolean canceled = false;
 			boolean showGalery = false;
-			while (!loginOK && !canceled){
+			while (!loginOK && !canceled) {
 				MyLogin login = new MyLogin();
-				//GridPane grid = login.MyLogin();
-				//border.setCenter(grid);
 
 				loginOK = login.loginSucessfully();
 				canceled = login.loginCanceled();
 				showGalery = login.showGalery();
-				
-				
 
 				if (!login.loginSucessfully()) {
 					Hilfsmethoden.setHinweisDialog(
@@ -657,8 +656,6 @@ public class MyGame extends Application {
 					}
 				}
 			}
-
-			
 			if (canceled) {
 				// Anwendung beenden
 				// alle Stages (Fenster) schließen
@@ -732,7 +729,14 @@ public class MyGame extends Application {
 							// System.out.println("Du hast ein Set verkauft !!! AccID: "
 							// + this.getId());
 
-							// vom Item Anzahl 2 abziehen
+							// vom Item Anzahl 2 abziehen (Cache)
+							boolean dbsave = false;
+							if (spielChoiceField.getValue().equals("Solospiel"))
+								dbsave = true;
+							if (dbsave) {
+								MyGameSQLConnection.subItemCount(accountItemList.get(this.getId()).getId(), accountItemList.get(this.getId()).getItemList()
+										.get(i).getId());
+							}
 							accountItemList.get(this.getId()).getItemList()
 									.get(i).subCount(new BigDecimal("2.0"));
 
@@ -773,10 +777,6 @@ public class MyGame extends Application {
 							}
 							// accountItemList.get(this.getId()).getItemList()
 							// .get(i).subCount(new BigDecimal("2"));
-
-							boolean dbsave = false;
-							if (spielChoiceField.getValue().equals("Solospiel"))
-								dbsave = true;
 							accountItemList.get(this.getId()).addItem(
 									auswahlAccId, "1", dbsave);
 
@@ -950,6 +950,7 @@ public class MyGame extends Application {
 								Hilfsmethoden.setHinweisDialog("gewonnen "
 										+ items.get(i).getName(), imgView, 0);
 							}
+							setBildanimation(image, this.getId());
 							setAccStage(vbox, this.getId());
 						}
 					}
@@ -1205,10 +1206,11 @@ public class MyGame extends Application {
 					// System.out.println("accUserID: " +
 					// accounts.get(j).getId());
 					// Transaktion zum User eintragen und gutschreiben
-					for (int k = 0; k < trxAccountHistorie.size(); k++) {
-						if (trxAccountHistorie.get(k).getId()
+					for (int k = 0; k < trxAcountHistorie.size(); k++) {
+						if (trxAcountHistorie.get(k).getId()
 								.equals(accounts.get(j).getId())) {
-							trxAccountHistorie.get(k).addTransaktion(trx);
+							trxAcountHistorie.get(k).addTransaktion(trx);
+							System.out.println("Transaktion gutgeschrieben: " + accounts.get(j).getId());
 						}
 					}
 
@@ -1465,37 +1467,49 @@ public class MyGame extends Application {
 
 	private void setAccStage(VBox vbox, int AccNr) {
 		vbox.setId("vbox" + AccNr);
+		// vbox.setStyle("-fx-background-color: #4d66cc;-fx-text-fill: WHITE;");
 		vbox.getStylesheets().add(pfad_data_css + "mygame.css");
-		
-		if (spielChoiceField.getValue().equals("Solospiel")) {
-			border.setCenter(vbox);
-		}else{
-			Scene scene = new Scene(vbox,((displayX - 250) / anzahlAccounts),
+	
+		Scene scene = new Scene(vbox,((displayX - 250) / anzahlAccounts),
 				displayY - 50);
 
-			scene.getStylesheets().add(pfad_data_css + "mygame.css");
-			Stage primaryStage = new Stage();
-			primaryStage.setTitle(accounts.get(AccNr).getName() + " "
+		scene.getStylesheets().add(pfad_data_css + "mygame.css");
+		Stage primaryStage = new Stage();
+		primaryStage.setTitle(accounts.get(AccNr).getName() + " "
 				+ accounts.get(AccNr).getBalance() + " UIG");
 
-			primaryStage.setScene(scene);
-			primaryStage.setX(AccNr * ((displayX - 250) / anzahlAccounts));
-			primaryStage.setY(25);
+		primaryStage.setScene(scene);
 
-			// alteStage des Accounts schliessen, wenn bereits vorhanden
-			if (accStages.size() == anzahlAccounts) {
+		if (!spielChoiceField.getValue().equals("Solospiel")) {
+			primaryStage.setX(AccNr * ((displayX - 250) / anzahlAccounts));
+		} else {
+			primaryStage.setX(0 * ((displayX - 250) / anzahlAccounts));
+		}
+
+		primaryStage.setY(25);
+
+		// alteStage des Accounts schliessen, wenn bereits vorhanden
+		if (accStages.size() == anzahlAccounts) {
+			if (!spielChoiceField.getValue().equals("Solospiel")) {
 				accStages.get(AccNr).closeStage();
 				accStages.get(AccNr).setStage(primaryStage);
 			} else {
-				accStages.add(new MyStageController(primaryStage));
+				accStages.get(0).closeStage();
+				accStages.get(0).setStage(primaryStage);
 			}
 
-			if (accStages.size() == 1) {
-				accStages.get(0).getStage().show();
-			} else {
-				accStages.get(AccNr).getStage().show();
-			}
+		} else {
+			accStages.add(new MyStageController(primaryStage));
 		}
+		// System.out.println("AccStagesNr.:" + AccNr);
+		// System.out.println("AnzAccStages:" + accStages.size());
+
+		if (accStages.size() == 1) {
+			accStages.get(0).getStage().show();
+		} else {
+			accStages.get(AccNr).getStage().show();
+		}
+
 
 		if ((gewonnen) && !(spielChoiceField.getValue() == "Solospiel")) {
 			// String musicFile = pfad_data_ton + "congratulations.mp3";
@@ -1513,12 +1527,20 @@ public class MyGame extends Application {
 					imgView);
 			
 			
-			//Rechteck-Form und Scaling
+			//TRANSFORM and Scaling
 			Rectangle rectangle = new Rectangle(300, 100, Color.LIGHTGRAY);
 			Image img = new Image("file:///" + pfad_data_itemjpg + "pokal.jpeg");
 			rectangle.setFill(new ImagePattern(img));
 			vbox.getChildren().add(rectangle);
-	        
+	        // TRANSLATION (Position ändern)
+	        Translate translate = new Translate();
+	        // Set arguments for translation
+	        translate.setX(200);
+	        translate.setY(50);
+	        translate.setZ(100);
+	        // Adding transformation to rectangle2
+	        //rectangle.getTransforms().addAll(translate);
+
 	        // SCALING (Größe ändern)
 	        Scale scale = new Scale();
 	        // Setting the scaling factor.
@@ -1529,8 +1551,13 @@ public class MyGame extends Application {
 	        scale.setPivotY(100);
 	         // Adding the transformation to rectangle2
 	        rectangle.getTransforms().addAll(scale);
-			
-	      
+		}
+		if ((gewonnen) && (spielChoiceField.getValue() == "Solospiel")) {
+			// String musicFile = pfad_data_ton + "congratulations.mp3";
+			String musicFile = pfad_data_ton + "congratulations_short.mp3";
+			Media sound = new Media(new File(musicFile).toURI().toString());
+			MediaPlayer mediaPlayer = new MediaPlayer(sound);
+			mediaPlayer.play();
 		}
 	}
 
@@ -1581,6 +1608,7 @@ public class MyGame extends Application {
 		 * fileChooser.showOpenDialog(null);
 		 */
 		accounts.clear();
+		// System.out.println("Load Account:" + name + pw + datenquelle);
 
 		// Account in accounts(0) speichern
 		switch (datenquelle) {
@@ -1618,7 +1646,7 @@ public class MyGame extends Application {
 		aktBalanceString.setValue("GameToken: 1000 UIG");
 
 		MyGame.accountItemList.clear();
-		MyGame.trxAccountHistorie.clear();
+		MyGame.trxAcountHistorie.clear();
 		for (int i = 0; i < accStages.size(); i++) {
 			accStages.get(i).closeStage();
 		}
@@ -1632,7 +1660,7 @@ public class MyGame extends Application {
 					"1000"));
 
 			// Account-Transaktionen initialisieren
-			MyGame.trxAccountHistorie.add(new AccountTransaktionList("Acc" + 1));
+			MyGame.trxAcountHistorie.add(new AccountTransaktionList("Acc" + 1));
 
 			// Account-ItemList initialisieren
 			AccountItemList accountItems = new AccountItemList("");
@@ -1697,5 +1725,64 @@ public class MyGame extends Application {
 		primaryStage.show();
 
 	}
+	
+	private TreeItem<String>  fillTreeView (TreeItem<String> treeItem , String sprache, String treeLevel){
+		for (int i=0; i<pictureList.size(); i++){
+			if (pictureList.get(i).getSort_view().substring(0,2).equals(treeLevel)){
+				if (sprache.equals("en")){
+					TreeItem<String> treeMenueItem = new TreeItem<String>(pictureList.get(i).getName_en());
+					treeItem.getChildren().add(treeMenueItem);
+				}else{
+					TreeItem<String> treeMenueItem = new TreeItem<String>(pictureList.get(i).getName_de());
+					treeItem.getChildren().add(treeMenueItem);
+				}
+			}
+		}
+		return treeItem;
+	}
+	
+	private void setBildanimation(Image image, int accNr) {
+		Rectangle rect = new Rectangle(accNr*((displayX-250)/anzahlAccounts) , 0, image.getWidth(), image.getHeight());
+		rect.setFill(new ImagePattern(image));
+		
+		Pane pane = new Pane();
+		pane.setMinSize(displayX, displayY);
+		pane.setStyle("-fx-background-color: rgba(255, 255, 255, 0.0);");
+		pane.getChildren().add(rect);
+
+		Scene scene = new Scene(pane, displayX, displayY);
+		scene.setFill(Color.TRANSPARENT);
+		Stage stage = new Stage();
+		stage.initStyle(StageStyle.UNDECORATED);
+		stage.initStyle(StageStyle.TRANSPARENT);
+		stage.setScene(scene);
+		
+		//Animation, Timeline anlegen und abspielen
+		KeyValue keyValuex = new KeyValue(rect.xProperty(), accNr*((displayX-250)/anzahlAccounts) + ((displayX-250)/anzahlAccounts)/2,
+				Interpolator.EASE_BOTH);
+		KeyValue keyValuey = new KeyValue(rect.yProperty(), displayY/2,
+				Interpolator.EASE_BOTH);		
+		
+		Random random = new Random();
+		KeyValue kVRotate = new KeyValue(rect.rotateProperty(), random.nextInt(360) + 180);
+	    KeyValue kVArcHeight = new KeyValue(rect.arcHeightProperty(), 30);
+	    KeyValue kVArcWidth = new KeyValue(rect.arcWidthProperty(), 30);
+	    KeyValue kVHeight = new KeyValue(rect.heightProperty(), rect.getWidth()*2);
+	    KeyValue kVWidth = new KeyValue(rect.widthProperty(), rect.getHeight()*2);
+	    		
+      	KeyFrame keyFrame = new KeyFrame(Duration.millis(animationsDauer), keyValuex, keyValuey, kVArcHeight, kVArcWidth, kVHeight, kVWidth, kVRotate);
+
+		Timeline timeline = new Timeline();
+		timeline.getKeyFrames().add(keyFrame);
+		timeline.setOnFinished(event -> {
+			stage.close();
+		});
+		timeline.play();
+
+		stage.showAndWait();
+
+	}
+	
+	
 	
 }

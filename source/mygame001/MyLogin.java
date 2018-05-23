@@ -32,29 +32,30 @@ public class MyLogin {
 	private static boolean canceled = false;
 	private static boolean showGalery = false;
 	
-	public String getname() {
-		return this.name;
+	public  String getname() {
+		return MyLogin.name;
 	}
 	
 	public String getDatenquelle() {
-		return this.datenquelle;
+		return MyLogin.datenquelle;
 	}
 
 	public String getPW() {
-		return this.pw;
+		return MyLogin.pw;
 	}
 	
 	public boolean loginSucessfully() {
-		return this.sucessfully;
+		return MyLogin.sucessfully;
 	}
 	
 	public boolean loginCanceled() {
-		return this.canceled;
+		return MyLogin.canceled;
 	}
 	
 	public boolean showGalery() {
-		return this.showGalery;
+		return MyLogin.showGalery;
 	}
+	
 	
 	/*
 	 * LoginGridPane
@@ -228,9 +229,8 @@ public class MyLogin {
 			public void handle(ActionEvent e) {
 				actiontargetc.setId("anmeldeknopf");
 				//Profil-Pane anzeigen
-				MyProfile profile = new MyProfile(getname(), getPW());
-				
-
+				System.out.println("Profil: " + userTextField.getText() + pwBox.getText());
+				MyProfile profile = new MyProfile(userTextField.getText() , pwBox.getText());
 			}});
 		
 		btng.setOnAction(new EventHandler<ActionEvent>() {
@@ -347,7 +347,7 @@ public class MyLogin {
 		primaryStage.showAndWait();
 	}
 	
-	
+
 
 
 }

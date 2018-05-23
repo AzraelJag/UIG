@@ -294,6 +294,104 @@ public class ExcelReadWriter {
 		wb.close();
 	}
 	
+	public static void readXLSXFileToPictureList(File file) throws IOException
+	{
+		String dateiname = file.toString().replace("\\", "/");
+//		System.out.println(dateiname);
+		InputStream ExcelFileToRead = new FileInputStream(dateiname);
+
+		XSSFWorkbook  wb = new XSSFWorkbook(ExcelFileToRead);
+		
+		XSSFSheet sheet = wb.getSheetAt(0);
+		XSSFRow row; 
+		XSSFCell cell =  null;
+
+		String level = new String();
+		String thema = new String();
+		String name_de = new String();
+		String name_en  = new String();
+		String sort_view  = new String();
+		String sort_galeryString  = new String();
+
+		String zellInhalt = new String();
+		
+		MyGame.items.clear();
+		Iterator rows = sheet.rowIterator();
+		int i = 0; //Spalte
+		int j = 0; //Zeile
+		while (rows.hasNext())
+		{
+			row=(XSSFRow) rows.next();
+			Iterator cells = row.cellIterator();
+			Boolean zeilenende = false;
+			i=0;
+//			while (cells.hasNext()){
+			while (i<100 && !zeilenende){
+//				System.out.println("i:" + i);
+				if (j>0){						//erste Zeile überlesen (Überschriften)
+//					System.out.println("j:" + j);
+					// leere Zelle auf leer setzen
+					if (sheet.getRow(j).getCell(i) == null) {
+						cell = sheet.getRow(0).getCell(0);
+						cell.setCellValue(" ");
+						cell.setCellType(XSSFCell.CELL_TYPE_STRING);
+						if (i>6) {
+							zeilenende = true;
+						}
+					}else{
+						cell=(XSSFCell) cells.next();
+						}
+					
+					if (cell.getCellType() == XSSFCell.CELL_TYPE_STRING) {
+						zellInhalt=cell.getStringCellValue().trim();
+					}
+					else if(cell.getCellType() == XSSFCell.CELL_TYPE_NUMERIC) {
+						zellInhalt=(new Double(cell.getNumericCellValue()).toString());
+					}
+						else{
+						//You Can Handel Boolean, Formula, Errors
+					}
+				
+					switch (i) {
+						case 0:
+							level=zellInhalt.trim();						
+							break;
+						case 1:
+							thema=zellInhalt.trim();		
+							break;
+						case 2:
+							name_de=zellInhalt.trim();		
+							break;
+						case 3:
+							name_en=zellInhalt.trim();		
+							break;
+						case 4:
+							sort_galeryString=zellInhalt.trim();		
+							break;
+						case 5:
+							sort_view=zellInhalt.trim();		
+							break;
+						default:
+//							System.out.println("Inhalt:"+zellInhalt+":");
+						 	if (zeilenende) {
+						 		MyGame.pictureList.add(new Picture(
+					               		level,
+					               		thema,
+					               		name_de,
+					               		name_en,
+					               		sort_view,
+					               		Integer.parseInt(sort_galeryString)));
+						 	} 
+						 	break;
+					}
+				}
+				i++;
+			}
+			j++;
+		}
+		wb.close();
+	}
+	
 	public static void readXLSXFileToAccountItemTable(File file, String useraccid) throws IOException
 	{
 		String dateiname = file.toString().replace("\\", "/");

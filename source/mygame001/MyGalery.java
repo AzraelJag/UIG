@@ -111,48 +111,8 @@ public class MyGalery {
 			picture.setAlignment(Pos.CENTER);
 			//picture.setSpacing(10);
 			picture.setPadding(new Insets(10, 150, 10, 10));
-			Label bildTitel = new Label();
-			switch (pictures.get(i)){
-			case "11":
-				bildTitel.setText(MyGame.lv11);
-				break;
-			case "21":
-				bildTitel.setText(MyGame.lv21);
-				break;
-			case "22":
-				bildTitel.setText(MyGame.lv22);
-				break;
-			case "23":
-				bildTitel.setText(MyGame.lv23);
-				break;
-			case "24":
-				bildTitel.setText(MyGame.lv24);
-				break;
-			case "31":
-				bildTitel.setText(MyGame.lv31);
-				break;
-			case "32":
-				bildTitel.setText(MyGame.lv32);
-				break;
-			case "33":
-				bildTitel.setText(MyGame.lv33);
-				break;
-			case "34":
-				bildTitel.setText(MyGame.lv34);
-				break;
-			case "41":
-				bildTitel.setText(MyGame.lv41);
-				break;
-			case "42":
-				bildTitel.setText(MyGame.lv42);
-				break;
-			case "43":
-				bildTitel.setText(MyGame.lv43);
-				break;
-			case "44":
-				bildTitel.setText(MyGame.lv44);
-				break;
-			}
+			Label bildTitel = Picture.getPictureName(pictures.get(i).substring(0,1), pictures.get(i).substring(1,2), MyGame.sprache);
+	
 			bildTitel.setStyle("-fx-text-fill: WHITE;");
 			bildTitel.setPadding(new Insets(30, 10, 10, 10));
 			hBox.setAlignment(Pos.CENTER);
@@ -167,12 +127,12 @@ public class MyGalery {
 			          public void handle(MouseEvent arg0)
 			          {
 			        	  if (arg0.getButton() == MouseButton.SECONDARY) { 
-			        		rectangle = new Rectangle(500, 500, Color.LIGHTGRAY);
 				  			Image img = new Image("file:///" + MyGame.pfad_data_itemjpg 
 				  				  + "L" + MyGame.level + MyGame.thema + "/Image.jpg");
+				  			rectangle = new Rectangle(img.getWidth(), img.getHeight(), Color.LIGHTGRAY);
 				  			rectangle.setFill(new ImagePattern(img));
 				  			Pane pane = new Pane(rectangle);
-				  			Scene scene = new Scene(pane, 500, 500);
+				  			Scene scene = new Scene(pane, img.getWidth(), img.getHeight());
 				  			scene.getStylesheets().add(MyGame.pfad_data_css + "mygame.css");
 				  			Stage bildstage = new Stage();
 				  			bildstage.setScene(scene);
@@ -248,7 +208,7 @@ public class MyGalery {
 		MyGame.thema = auswahlThema;
 		hBox.setPadding(new Insets(30, 10, 10, 30));
 		ScrollPane scrollpane = new ScrollPane(hBox);
-
+		
 		Scene scene = new Scene(scrollpane, MyGame.displayX, MyGame.displayY-100);
 		scene.getStylesheets().add(MyGame.pfad_data_css + "mygame.css");
 		galeryStage.setScene(scene);
@@ -262,7 +222,21 @@ public class MyGalery {
 	// Galeryposition eines Bildes ermitteln
 	private static int getBildPosition(String picture) {
 		int position = 0;
-		switch (picture){
+		String	pLevel = picture.substring(0, 1);
+		String	pThema = picture.substring(1, 2);
+		if (MyGame.pictureList.size() > 0){
+			boolean gefunden = false;
+			for (int i=0; i<MyGame.pictureList.size() && !gefunden; i++){
+				if (pLevel.equals(MyGame.pictureList.get(i).getLevel()) &&
+					pThema.equals(MyGame.pictureList.get(i).getThema())){
+					gefunden = true;
+					position = MyGame.pictureList.get(i).getSortGalery();
+				}
+			}
+			
+		}else
+		{
+			switch (picture){
 			case "11":			//Familie
 				position = 0;
 				break;
@@ -284,23 +258,25 @@ public class MyGalery {
 			case "44":			//VW-Kraftwerk
 				position = 6;
 				break;	
-			case "41":			//Sonnenuntergang
+			case "32":			//Hasselbach - Hummel
 				position = 7;
 				break;	
-			case "32":			//Hasselbach - Hummel
+			case "34":			//Hasselbach - Wurzel
 				position = 8;
 				break;	
 			case "33":			//Hasselbach - Blumenwiese
 				position = 9;
 				break;	
-			case "34":			//Hasselbach - Wurzel
+			case "41":			//Sonnenuntergang
 				position = 10;
 				break;	
+
 			default:			//Ansonsten immer am Anfang
 				position = 0;
 				break;
+			}
 		}
-
+		//System.out.println("Sort: " + position );
 		return position;
 	}
 	

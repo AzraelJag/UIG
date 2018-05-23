@@ -22,7 +22,7 @@ public class Item {
 		this.name = new SimpleStringProperty(name);
 		this.costFiat = new BigDecimal(costFiat);
 		this.costUIG = new BigDecimal(costUIG);
-		this.wuerfelpos = Integer.parseInt(position)+1;
+		this.wuerfelpos = Integer.parseInt(costUIG);
 		this.count = new BigDecimal(1.0);
 		this.level = new Integer(level);
 		this.position = new Integer(position);
@@ -64,6 +64,7 @@ public class Item {
 
 	public void subCount(BigDecimal count) {
 		this.count = this.count.subtract(count);
+
 	}
 
 	public BigDecimal getCount() {

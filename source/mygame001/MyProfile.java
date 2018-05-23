@@ -2,6 +2,8 @@ package eth;
 
 import java.math.BigDecimal;
 
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -9,9 +11,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -25,7 +30,6 @@ public class MyProfile {
 	private static String wallet 		= new String();
 	private static String rahmen 		= new String();
 	private static BigDecimal balanceUIG 	= new BigDecimal("0");
-
 
 	public String getName() {
 		return this.name;
@@ -43,8 +47,12 @@ public class MyProfile {
 		return this.wallet;
 	}
 	
-	public String getrahmen() {
+	public String getRahmen() {
 		return this.rahmen;
+	}
+	
+	public String getPW() {
+		return this.pw;
 	}
 
 	
@@ -62,15 +70,14 @@ public class MyProfile {
 		grid.setHgap(10);
 		grid.setVgap(10);
 		grid.setPadding(new Insets(25, 25, 25, 25));
-
 		
 		//Profildaten einlesen
 		
 		erfolgreich = MyGameSQLConnection.getProfile(this);
 
 		if (erfolgreich) {
-		// UserID Eingabefeld
 			
+		// UserID Eingabefeld
 		Label userName = new Label("User:");
 		grid.add(userName, 0, 1);
 		final TextField userTextField = new TextField(MyProfile.name);
@@ -109,8 +116,10 @@ public class MyProfile {
 		final TextField balanceTextField = new TextField(MyProfile.balanceUIG.toString() + " UIG Token");
 		balanceTextField.setEditable(false);
 		grid.add(balanceTextField, 1, 6);
+		
+		//BUTTONS
 
-		// Anmeldeknopf, füllt Userid und Password
+		// Änderung Speichern 
 		Button btn = new Button("Änderung speichern");
 		HBox hbBtn = new HBox(10);
 		hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
@@ -127,6 +136,58 @@ public class MyProfile {
 		grid.add(hbBtnc, 2, 7);
 		final Text actiontarget = new Text();
 		grid.add(actiontarget, 2, 7);
+		
+		btnc.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				actiontargetc.setId("anmeldeknopf");
+				//Profil-Fenster schliessen
+				Stage stage = (Stage) grid.getScene().getWindow();
+				stage.close();
+			}});
+		
+		// User-Transaktionshistorie
+		Button btntrx = new Button("UIG Transaktionen");
+		HBox hbBtntrx = new HBox(10);
+		hbBtntrx.setAlignment(Pos.BOTTOM_RIGHT);
+		hbBtntrx.getChildren().add(btntrx);
+		grid.add(hbBtntrx, 4, 7);
+		final Text actiontargettrx = new Text();
+		grid.add(actiontargettrx, 4, 7);
+		
+		btntrx.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				actiontargettrx.setId("anmeldeknopf");
+				// füllen User-TransaktionsList
+				//UserID ermitteln
+				String userid = MyGameSQLConnection.ermittleUserid(walletTextField.getText());
+				MyGame.accounts.clear();
+				MyGame.accounts.add(new Account(userid, name, pwBox.getText() 
+						, walletTextField.getText(),"0"));
+				MyGame.trxAcountHistorie.clear();
+				MyGame.trxAcountHistorie.add(new AccountTransaktionList(userid));
+				
+				MyGameSQLConnection.getAccountTransaktionen(MyGame.accounts.get(0).getId(), "ropsten");
+				
+				MyGame.trxAccountTableView = new TableView<Transaktion>();
+				MyGame.trxAccountTableView = TransaktionTableView
+						.getTransaktionTableView(MyGame.trxAcountHistorie.get(0).getItemList());
+				
+				VBox vbox = new VBox();
+				vbox.setSpacing(10);
+				vbox.autosize();
+				VBox.setVgrow(MyGame.trxAccountTableView, Priority.ALWAYS);
+				vbox.getChildren().addAll(MyGame.trxAccountTableView);
+				Scene scene = new Scene(vbox, 1020, 600);
+				Stage primaryStage = new Stage();
+				primaryStage.setTitle("UIG Transaktionshistorie: ");
+				primaryStage.setScene(scene);
+				primaryStage.setX(450);
+				primaryStage.setY(150);
+				primaryStage.showAndWait();
+			}});
+		
 		}
 		
 		Scene scene = new Scene(grid);
@@ -134,6 +195,7 @@ public class MyProfile {
 		primaryStage.setTitle("Profil: " + this.getName());
 		primaryStage.setScene(scene);
 		primaryStage.showAndWait();
+
 	}
 
 	public void setPW(String pw) {

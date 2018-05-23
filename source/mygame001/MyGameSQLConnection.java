@@ -10,6 +10,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import allgemein.DateTime;
 import allgemein.Hilfsmethoden;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.paint.Color;
@@ -19,10 +20,15 @@ import javafx.util.converter.IntegerStringConverter;
 public class MyGameSQLConnection {
 
 	public static Connection con = null;
-	//private static String dbHost = "localhost"; // Hostname
-	//private static String dbUser = "root"; // Datenbankuser
-	//private static String dbPass = ""; // Datenbankpasswort
-
+	// private static String dbHost = "localhost"; // Hostname
+	// private static String dbUser = "root"; // Datenbankuser
+	// private static String dbPass = ""; // Datenbankpasswort
+	private static String dbPort = "3306"; // Port -- Standard: 3306
+	private static String dbName = "mygame001"; // Datenbankname
+	// private static String dbHost = "192.168.178.39"; // Hostname
+	private static String dbHost = "Michaele-Notebk"; // Hostname
+	private static String dbUser = "mygame001"; // Datenbankuser
+	private static String dbPass = "zw!?!vb123"; // Datenbankpasswort
 
 	// public static String User_Group;
 
@@ -36,9 +42,9 @@ public class MyGameSQLConnection {
 					+ dbPort + "/" + dbName + "?" + "user=" + dbUser + "&"
 					+ "password=" + dbPass);
 		} catch (ClassNotFoundException e) {
-			System.out.println("DB (MySQL-Treiber) nicht gefunden");
+			System.out.println("Datenbank nicht verfügbar ...");
 		} catch (SQLException e) {
-			System.out.println("Verbindung nicht moglich");
+			System.out.println("Verbindung nicht möglich");
 			System.out.println("SQLException: " + e.getMessage());
 			System.out.println("SQLState: " + e.getSQLState());
 			System.out.println("VendorError: " + e.getErrorCode());
@@ -54,7 +60,7 @@ public class MyGameSQLConnection {
 	// Speichere letzten User-Login-TS
 	public static void putLoginTS(String userid) {
 		java.sql.PreparedStatement query;
-		String aktTS = Hilfsmethoden.getAktTS();
+		String aktTS = DateTime.getAktTS();
 		try {
 			query = con
 					.prepareStatement("UPDATE ACCOUNT SET LAST_LOGIN_TS = ? WHERE USER_ID = ?");
@@ -65,16 +71,15 @@ public class MyGameSQLConnection {
 			e.printStackTrace();
 		}
 	}
-	
-	// Speichere letzten User-Login-TS
+
+	// ItemAnzahl erhöhen
 	public static void addItemCount(String userid, String itemid) {
 		java.sql.PreparedStatement query;
-		String aktTS = Hilfsmethoden.getAktTS();
+		String aktTS = DateTime.getAktTS();
 		try {
 			query = con
 					.prepareStatement("UPDATE USER_ITEMS SET ANZAHL = ANZAHL +1 "
-							+ "WHERE USER_ID = ? " 
-							+ "AND ITEM_ID = ?");
+							+ "WHERE USER_ID = ? " + "AND ITEM_ID = ?");
 			query.setString(1, userid);
 			query.setString(2, itemid);
 			query.executeUpdate();
@@ -83,6 +88,22 @@ public class MyGameSQLConnection {
 		}
 	}
 	
+	// ItemAnzahl nach Verkauf verringern
+	public static void subItemCount(String userid, String itemid) {
+		java.sql.PreparedStatement query;
+		String aktTS = DateTime.getAktTS();
+		try {
+			query = con
+					.prepareStatement("UPDATE USER_ITEMS SET ANZAHL = ANZAHL -2 "
+							+ "WHERE USER_ID = ? " + "AND ITEM_ID = ?");
+			query.setString(1, userid);
+			query.setString(2, itemid);
+			query.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	// neues Item in USER_ITEMS eintragen
 	public static boolean addItemToUser(String userid, String itemid) {
 		boolean erfolgreich = false;
@@ -94,12 +115,12 @@ public class MyGameSQLConnection {
 						.prepareStatement("INSERT INTO USER_ITEMS (USER_ID, ITEM_ID, ANZAHL, AEND_TS) VALUES (?, ?, 1, ?)");
 				query.setString(1, userid);
 				query.setString(2, itemid);
-				query.setString(3, Hilfsmethoden.getAktTS());
+				query.setString(3, DateTime.getAktTS());
 				// query.setString(4, text);
 				query.executeUpdate();
 				erfolgreich = true;
 			} catch (SQLException e) {
-				System.out.println("Error User_Items " + userid + itemid 
+				System.out.println("Error User_Items " + userid + itemid
 						+ " speichern");
 				e.printStackTrace();
 				erfolgreich = false;
@@ -114,18 +135,20 @@ public class MyGameSQLConnection {
 		Statement query;
 		con = getInstance();
 		if (con != null) {
-			//System.out.println("fillUserAccount: " + name + " " + pw); 
+			// System.out.println("fillUserAccount: " + name + " " + pw);
 			try {
 				query = con.createStatement();
 				dbvorhanden = true;
 				// Tabelle anzeigen
 				String sql = "SELECT USER_ID, USER_NAME, PW, WALLET_ADRESS, EMAIL, SPRACH_CODE, FIRST_TS, AEND_TS, LAST_LOGIN_TS, BALANCE "
 						+ "FROM USER "
-						+ "WHERE USER_NAME like '" + name + "' AND PW like '" + pw + "' ";
+						+ "WHERE USER_NAME like '"
+						+ name
+						+ "' AND PW like '" + pw + "' ";
 				ResultSet result = query.executeQuery(sql);
 				// Ergebnisstabelle durchforsten
-				//System.out.println("Accounts:");
-				//System.out.println("=========");
+				// System.out.println("Accounts:");
+				// System.out.println("=========");
 				while (result.next()) {
 					String r_user_id = result.getString("USER_ID");
 					String r_user_name = result.getString("USER_NAME");
@@ -138,17 +161,14 @@ public class MyGameSQLConnection {
 					String r_last_login_ts = result.getString("LAST_LOGIN_TS");
 					String r_balance = result.getString("BALANCE");
 					/*
-					System.out.println(r_user_id + r_user_name + r_pw + r_wallet_adress
-							+ r_email + r_sprache + r_first_ts + r_aend_ts
-							+ r_last_login_ts + r_balance);
-					*/
-					MyGame.accounts.add(new Account(
-							r_user_id,
-							r_user_name,
-							r_pw,
-							r_wallet_adress,
-							r_balance));
-					//System.out.println("neuer Account:" + MyGame.accounts.get(0).getId());
+					 * System.out.println(r_user_id + r_user_name + r_pw +
+					 * r_wallet_adress + r_email + r_sprache + r_first_ts +
+					 * r_aend_ts + r_last_login_ts + r_balance);
+					 */
+					MyGame.accounts.add(new Account(r_user_id, r_user_name,
+							r_pw, r_wallet_adress, r_balance));
+					// System.out.println("neuer Account:" +
+					// MyGame.accounts.get(0).getId());
 				}
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -171,8 +191,8 @@ public class MyGameSQLConnection {
 						+ "FROM ITEMS " + "ORDER BY ITEM_ID";
 				ResultSet result = query.executeQuery(sql);
 				// Ergebnisstabelle durchforsten
-				//System.out.println("Items:");
-				//System.out.println("=========");
+				// System.out.println("Items:");
+				// System.out.println("=========");
 				while (result.next()) {
 					String r_item_id = result.getString("ITEM_ID");
 					String r_item_name = result.getString("ITEM_NAME");
@@ -185,9 +205,47 @@ public class MyGameSQLConnection {
 					MyGame.items.add(new Item(r_item_id, r_item_name,
 							r_wuerfel_pos, r_wuerfel_pos, r_level, r_bild_pos,
 							r_thema));
-					//System.out.println(r_item_id + r_item_name + r_cost_fiat
-					//		+ r_cost_token + r_wuerfel_pos + r_bild_pos
-					//		+ r_level + r_thema);
+					// System.out.println(r_item_id + r_item_name + r_cost_fiat
+					// + r_cost_token + r_wuerfel_pos + r_bild_pos
+					// + r_level + r_thema);
+
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return dbvorhanden;
+	}
+
+	// Lese Picture-Daten
+	public static boolean fillPictures() {
+		boolean dbvorhanden = false;
+		con = getInstance();
+		if (con != null) {
+			Statement query;
+			try {
+				query = con.createStatement();
+				dbvorhanden = true;
+				// Ergebnisstabelle durchforsten
+				String sql = "SELECT LEVEL, THEMA, NAME_DE, NAME_EN, SORT_VIEW, SORT_GALERY "
+						+ "FROM PICTURES " + "ORDER BY SORT_VIEW";
+				ResultSet result = query.executeQuery(sql);
+				// Ergebnisstabelle durchforsten
+				// System.out.println("Items:");
+				// System.out.println("=========");
+				while (result.next()) {
+					String r_level = result.getString("LEVEL");
+					String r_thema = result.getString("THEMA");
+					String r_name_de = result.getString("NAME_DE");
+					String r_name_en = result.getString("NAME_EN");
+					String r_sort_view = result.getString("SORT_VIEW");
+					int r_sort_galery = result.getInt("SORT_GALERY");
+
+					MyGame.pictureList.add(new Picture(r_level, r_thema,
+							r_name_de, r_name_en, r_sort_view, r_sort_galery));
+					// System.out.println(r_item_id + r_item_name + r_cost_fiat
+					// + r_cost_token + r_wuerfel_pos + r_bild_pos
+					// + r_level + r_thema);
 
 				}
 			} catch (SQLException e) {
@@ -210,17 +268,18 @@ public class MyGameSQLConnection {
 						+ "' " + "ORDER BY ITEM_ID";
 				ResultSet result = query.executeQuery(sql);
 				// Ergebnisstabelle durchforsten
-				//System.out.println("Account-Items:");
-				//System.out.println("==============");
+				// System.out.println("Account-Items:");
+				// System.out.println("==============");
 				AccountItemList accountItems = new AccountItemList(userid);
 				while (result.next()) {
 					String r_user_id = result.getString("USER_ID");
 					String r_item_id = result.getString("ITEM_ID");
 					int r_anzahl = result.getInt("ANZAHL");
 					String r_aend_TS = result.getString("AEND_TS");
-					//System.out.println(r_user_id + r_item_id + r_anzahl
-					//		+ r_aend_TS);
-					accountItems.addItem(r_item_id, Integer.toString(r_anzahl), false);
+					// System.out.println(r_user_id + r_item_id + r_anzahl
+					// + r_aend_TS);
+					accountItems.addItem(r_item_id, Integer.toString(r_anzahl),
+							false);
 				}
 				MyGame.accountItemList.add(accountItems);
 			} catch (SQLException e) {
@@ -323,8 +382,9 @@ public class MyGameSQLConnection {
 							// verarbeiten
 							String sqlvorhanden = "SELECT COUNT(*) AS ANZAHL "
 									+ "FROM USER_TRANSAKTIONEN "
-									+ "WHERE BLOCKNUMMER = '" + r_blocknummer + "' " 
-									+ "AND BLOCKCHAIN 	 = '" + blockchain + "' ";
+									+ "WHERE BLOCKNUMMER = '" + r_blocknummer
+									+ "' " + "AND BLOCKCHAIN 	 = '"
+									+ blockchain + "' ";
 							ResultSet resultvorhanden = query
 									.executeQuery(sqlvorhanden);
 							// Ergebnisstabelle durchforsten
@@ -335,8 +395,8 @@ public class MyGameSQLConnection {
 							while (resultvorhanden.next()) {
 								int r_count = resultvorhanden.getInt("ANZAHL");
 								if (r_count > 0) {
-								vorhanden = true;
-								System.out
+									vorhanden = true;
+									System.out
 											.println("User_Transaktion bereits vorhanden: "
 													+ r_blocknummer);
 								}
@@ -362,7 +422,7 @@ public class MyGameSQLConnection {
 										.getDataAsBigDecimal8().toString());
 								userTrxquery.setString(5, r_transaktion);
 								userTrxquery.setString(6,
-										Hilfsmethoden.getAktTS());
+										DateTime.getAktTS());
 								// query.setString(4, text);
 								userTrxquery.executeUpdate();
 								erfolgreich = userBalanceGutschreiben(userid,
@@ -383,6 +443,41 @@ public class MyGameSQLConnection {
 			}
 		}
 	}
+	
+	// lese ACCOUNT-TRANSAKTIONEN-Daten 
+		public static void getAccountTransaktionen(String userid, String blockchain) {
+			con = getInstance();
+			if (con != null) {
+				Statement query;
+
+				// alle USER-Transaktionen lesen
+				try {
+					query = con.createStatement();
+					String sql = "SELECT TRANSAKTION , AEND_TS "
+							+ "FROM USER_TRANSAKTIONEN " + "WHERE USER_ID = '"
+							+ userid + "' " + "AND BLOCKCHAIN = '" + blockchain
+							+ "' " + "ORDER BY BLOCKNUMMER DESC";
+					ResultSet result = query.executeQuery(sql);
+					// Ergebnisstabelle durchforsten
+					System.out.println("Account-Transaktionen:");
+					System.out.println("======================");
+					while (result.next()) {
+						String r_transaktion = result.getString("TRANSAKTION");
+						String r_aend_ts = result.getString("AEND_TS");
+						Transaktion trx = new Transaktion(r_transaktion);
+						trx.setTimestamp(r_aend_ts);
+						MyGame.transaktionGutschreiben(trx);
+					}
+					System.out.println("AnzTrxHistorie:" +  MyGame.trxAcountHistorie.size());
+					//TableView aktualisieren
+					MyGame.trxHistorieTableView = TransaktionTableView.getTransaktionTableView(MyGame.trxAcountHistorie.get(0).getItemList());
+				} catch (SQLException e) {
+					System.out.println("keine User Transaktion gefunden");
+					e.printStackTrace();
+				}
+			}
+		}
+
 
 	public static boolean userBalanceGutschreiben(String userid, String wert) {
 		boolean erfolgreich = false;
@@ -390,7 +485,7 @@ public class MyGameSQLConnection {
 		if (con != null) {
 			Statement query;
 			try {
-				//System.out.println("USERID:" + userid + " Wert: " + wert);
+				// System.out.println("USERID:" + userid + " Wert: " + wert);
 				query = con.createStatement();
 				// aktuelle User Balance ermitteln
 				String sql = "SELECT BALANCE " + "FROM USER "
@@ -399,17 +494,19 @@ public class MyGameSQLConnection {
 				// Ergebnisstabelle durchforsten
 				while (result.next()) {
 					String r_balance = result.getString("BALANCE");
-					//System.out.println("USERBALANCE-vorher:" + r_balance);
+					// System.out.println("USERBALANCE-vorher:" + r_balance);
 					BigDecimal aktBalance = new BigDecimal(r_balance);
 					BigDecimal addBalance = new BigDecimal(wert);
 					aktBalance = aktBalance.add(addBalance);
-					//System.out.println("USERBALANCE-nachher:" + aktBalance);
-					//neueBalance eintragen
+					// System.out.println("USERBALANCE-nachher:" + aktBalance);
+					// neueBalance eintragen
 					java.sql.PreparedStatement queryupd;
 					try {
 						queryupd = con
-								.prepareStatement("UPDATE USER SET BALANCE =  '" + aktBalance.toString() + "' " 
-													+ "WHERE USER_ID = '" + userid + "' ");
+								.prepareStatement("UPDATE USER SET BALANCE =  '"
+										+ aktBalance.toString()
+										+ "' "
+										+ "WHERE USER_ID = '" + userid + "' ");
 						queryupd.executeUpdate();
 						erfolgreich = true;
 					} catch (SQLException e) {
@@ -417,7 +514,7 @@ public class MyGameSQLConnection {
 						e.printStackTrace();
 						erfolgreich = false;
 					}
-					
+
 				}
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -451,33 +548,35 @@ public class MyGameSQLConnection {
 		}
 		return letzterGelsenerBlockIntBigInt;
 	}
-	
+
 	// Lese letzten eingelesenen Block
-		public static String ermittleUserid(String adresse) {
-			String userid = new String();
-			String upperadresse = adresse.substring(2,adresse.length()).toUpperCase();
-			upperadresse = upperadresse.substring(upperadresse.length()-40, upperadresse.length());
-			System.out.println("Upperadresse: " + upperadresse);
-			con = getInstance();
-			if (con != null) {
+	public static String ermittleUserid(String adresse) {
+		String userid = new String();
+		String upperadresse = adresse.substring(2, adresse.length())
+				.toUpperCase();
+		upperadresse = upperadresse.substring(upperadresse.length() - 40,
+				upperadresse.length());
+		System.out.println("Upperadresse: " + upperadresse);
+		con = getInstance();
+		if (con != null) {
 			Statement query;
 			try {
 				query = con.createStatement();
 				// Usertabelle durchforsten
-				String sql = "SELECT USER_ID "
-						+ "FROM USER " 
-						+ "WHERE UPPER(WALLET_ADRESS) = '0X" + upperadresse + "' ";
+				String sql = "SELECT USER_ID " + "FROM USER "
+						+ "WHERE UPPER(WALLET_ADRESS) = '0X" + upperadresse
+						+ "' ";
 				ResultSet result = query.executeQuery(sql);
 				// Ergebnisstabelle durchforsten
 				while (result.next()) {
-					userid = result	.getString("USER_ID");
+					userid = result.getString("USER_ID");
 				}
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
-			}
-			return userid;
 		}
+		return userid;
+	}
 
 	// neue Transaktionen in Transaktionshistorie speichern
 	public static boolean putTrxToHistorie(int blocknummer, String transaktion) {
@@ -490,7 +589,7 @@ public class MyGameSQLConnection {
 						.prepareStatement("INSERT INTO transaktionshistorie (BLOCKCHAIN,BLOCKNUMMER,TRANSAKTION,AEND_TS) VALUES ('ropsten', ?, ?, ?)");
 				query.setInt(1, blocknummer);
 				query.setString(2, transaktion);
-				query.setString(3, Hilfsmethoden.getAktTS());
+				query.setString(3, DateTime.getAktTS());
 				// query.setString(4, text);
 				query.executeUpdate();
 				erfolgreich = true;
@@ -506,8 +605,8 @@ public class MyGameSQLConnection {
 
 	// Login prüfen
 	public static boolean pruefeLogin(String userid, String pw) {
-		//System.out.println("User: " + userid);
-		//System.out.println("PW: " + pw);
+		// System.out.println("User: " + userid);
+		// System.out.println("PW: " + pw);
 		boolean erfolgreich = false;
 		con = getInstance();
 		if (con != null) {
@@ -515,15 +614,14 @@ public class MyGameSQLConnection {
 			try {
 				query = con.createStatement();
 				// Usertabelle durchforsten
-				String sql = "SELECT USER_NAME "
-						+ "FROM USER " 
-						+ "WHERE USER_NAME = '" + userid + "' "
-						+ "AND PW = '" + pw + "' " ;
+				String sql = "SELECT USER_NAME " + "FROM USER "
+						+ "WHERE USER_NAME = '" + userid + "' " + "AND PW = '"
+						+ pw + "' ";
 				ResultSet result = query.executeQuery(sql);
 				// Ergebnisstabelle durchforsten
 				while (result.next()) {
 					String r_userid = result.getString("USER_NAME");
-					if (r_userid.equals(userid)){
+					if (r_userid.equals(userid)) {
 						erfolgreich = true;
 					}
 				}
@@ -532,49 +630,55 @@ public class MyGameSQLConnection {
 				e.printStackTrace();
 			}
 		}
-		return erfolgreich;
-	}
-	
-	// User-Profil lesen
-	public static boolean getProfile(MyProfile profile) {
-		//System.out.println("User: " + userid);
-		//System.out.println("PW: " + pw);
-		boolean erfolgreich = false;
-		profile.setPW("das Passwort");
-		profile.setName("der Username");
-		profile.setSprache("de");
-		profile.setEmail("xxx@yyy");
-		profile.setWallet("ssssssssswer4554353frfgfg54345t3453");
-		profile.setBalanceUIG(new BigDecimal("85.0"));
-		erfolgreich = true;
-		/*
-		con = getInstance();
-		if (con != null) {
-			Statement query;
-			try {
-				query = con.createStatement();
-				// Usertabelle durchforsten
-				String sql = "SELECT USER_NAME "
-						+ "FROM USER " 
-						+ "WHERE USER_NAME = '" + userid + "' "
-						+ "AND PW = '" + pw + "' " ;
-				ResultSet result = query.executeQuery(sql);
-				// Ergebnisstabelle durchforsten
-				while (result.next()) {
-					String r_userid = result.getString("USER_NAME");
-					if (r_userid.equals(userid)){
-						erfolgreich = true;
-					}
-				}
-			} catch (SQLException e) {
-				erfolgreich = false;
-				e.printStackTrace();
-			}
-		}
-		*/
 		return erfolgreich;
 	}
 
-	
+	// User-Profil lesen
+	public static boolean getProfile(MyProfile profile) {
+		boolean erfolgreich = false;
+
+		con = getInstance();
+		if (con != null) {
+			Statement query;
+			try {
+				query = con.createStatement();
+				// Usertabelle durchforsten
+				String sql = "SELECT SPRACH_CODE, EMAIL, WALLET_ADRESS, BALANCE "
+						+ "FROM USER "
+						+ "WHERE USER_NAME = '"
+						+ profile.getName()
+						+ "' "
+						+ "AND PW = '"
+						+ profile.getPW() + "' ";
+				ResultSet result = query.executeQuery(sql);
+				// Ergebnisstabelle durchforsten
+				while (result.next()) {
+					String r_sprache = result.getString("SPRACH_CODE");
+					String r_email = result.getString("EMAIL");
+					String r_wallet = result.getString("WALLET_ADRESS");
+					String r_balance = result.getString("BALANCE");
+					BigDecimal aktBalance = new BigDecimal(r_balance);
+					profile.setPW(profile.getPW());
+					profile.setName(profile.getName());
+					profile.setSprache(r_sprache);
+					profile.setEmail(r_email);
+					profile.setWallet(r_wallet);
+					profile.setBalanceUIG(aktBalance);
+				}
+				erfolgreich = true;
+			} catch (SQLException e) {
+				profile.setPW("das Passwort");
+				profile.setName("der Username");
+				profile.setSprache("de");
+				profile.setEmail("xxx@yyy");
+				profile.setWallet("ssssssssswer4554353frfgfg54345t3453");
+				profile.setBalanceUIG(new BigDecimal("85.0"));
+				// erfolgreich = false;
+				e.printStackTrace();
+			}
+		}
+
+		return erfolgreich;
+	}
 
 }

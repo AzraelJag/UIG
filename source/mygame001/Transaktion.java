@@ -3,6 +3,7 @@ package eth;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import allgemein.DateTime;
 import javafx.beans.property.SimpleStringProperty;
 
 public class Transaktion {
@@ -20,6 +21,7 @@ public class Transaktion {
 	private final SimpleStringProperty topics1;
 	private final SimpleStringProperty topics2;
 	private final SimpleStringProperty topics3;
+	private final SimpleStringProperty timestamp;
 
 	public Transaktion(String trxString) {
 		this.trxString = new SimpleStringProperty(trxString);
@@ -36,9 +38,25 @@ public class Transaktion {
 		this.topics1 = new SimpleStringProperty(trxData[9]);
 		this.topics2 = new SimpleStringProperty(trxData[10]);
 		this.topics3 = new SimpleStringProperty(trxData[11]);
-
+		this.timestamp = new SimpleStringProperty("00.00.0000 00:00");
 	}
 
+	public String getTimestamp() {
+		if (MyGame.sprache == "de"){
+			return this.timestamp.get();
+		}else{
+			return this.timestamp.get();
+		}
+	}
+	
+	public String getDateTime() {
+		return DateTime.getDateTime(this.timestamp.get(), MyGame.sprache);
+	}	
+	
+	public void setTimestamp(String timestamp) {
+		this.timestamp.set(timestamp);
+	}
+	
 	public String getTrxString() {
 		return this.trxString.get();
 	}
